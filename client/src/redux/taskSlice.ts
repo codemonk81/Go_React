@@ -34,9 +34,9 @@ export const getTasks = createAsyncThunk<Task[], void, { rejectValue: string }>(
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      const tasks: TasksResponse = await response.json();
-      toast.success("Tasks fetched successfully!");
-      return tasks.tasks;
+      const data: TasksResponse = await response.json();
+      toast.success("All tasks got successfully!");
+      return data.tasks;
     } catch (error: any) {
       toast.error(`Error fetching tasks: ${error.message}`);
       return rejectWithValue("Server Error!");
@@ -75,7 +75,7 @@ export const addTask = createAsyncThunk<
       }
 
       const data: any = await response.json();
-      toast.success("Task added successfully!");
+      toast.success("Task created successfully!");
       return data.data;
     } catch (error: any) {
       toast.error(`Error adding task: ${error.message}`);

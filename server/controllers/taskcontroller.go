@@ -24,7 +24,7 @@ func CreateTask(c *gin.Context) {
 	initializers.DB.Create(&taskInput)  
 
 	// Return the created task as JSON.  
-	c.JSON(http.StatusOK, gin.H{"data": taskInput})  
+	c.JSON(http.StatusOK, gin.H{"data": taskInput, "msg": "Task created successfully!"})  
 }  
 
 // GetALLTask retrieves all tasks from the database.  
@@ -40,7 +40,7 @@ func GetALLTask(c *gin.Context) {
 	}  
 
 	// Return the tasks as JSON.  
-	c.JSON(http.StatusOK, gin.H{"tasks": tasks})  
+	c.JSON(http.StatusOK, gin.H{"tasks": tasks, "msg": "All tasks got successfully!"})  
 }  
 
 // DoneTask updates the state of a task.  
@@ -61,7 +61,7 @@ func DoneTask(c *gin.Context) {
 
 	//If task is already complete, return message  
 	if task.State == 2 {  
-		c.JSON(http.StatusOK, gin.H{"message": "Task state is already complete"}) // Or return an error if that's unexpected  
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Task state is already complete"}) // Or return an error if that's unexpected  
 		return  
 	}  
 
@@ -118,7 +118,7 @@ func UpdateTask(c *gin.Context) {
 	}  
 
 	// Return the updated task as JSON.  
-	c.JSON(http.StatusOK, gin.H{"task": task})  
+	c.JSON(http.StatusOK, gin.H{"task": task, "msg": "Task updated successfully!"})  
 }  
 
 // DeleteTask deletes a task from the database.  
@@ -134,5 +134,5 @@ func DeleteTask(c *gin.Context) {
 	}  
 
 	// Return a success message as JSON.  
-	c.JSON(http.StatusOK, gin.H{"data": "Deleted the Task"})  
+	c.JSON(http.StatusOK, gin.H{"msg": "Task deleted"})  
 }
