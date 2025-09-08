@@ -30,7 +30,7 @@ func main() {
 	router.POST("api/tasks/add", controllers.CreateTask)
 	router.GET("api/tasks",  controllers.GetALLTask)
 	router.DELETE("api/tasks/:id", controllers.DeleteTask)
-	router.PUT("api/tasks/:id", controllers.DoneTask)
-	router.POST("api/tasks/:id", controllers.UpdateTask)
+	router.PUT("api/tasks/state/:id", controllers.DoneTask)
+	router.PUT("api/tasks/update/:id", controllers.UpdateTask)
 	router.Run()
 }

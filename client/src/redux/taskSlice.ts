@@ -123,10 +123,10 @@ export const doneTask = createAsyncThunk<Task, number, { rejectValue: string }>(
   "tasks/doneTask",
   async (taskId, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${BASE_URL}/${taskId}`, {
-        method: "PUT", // Or PATCH, depending on your API
+      const response = await fetch(`${BASE_URL}/state/${taskId}`, {
+        method: "PUT",
         headers: {
-          "Content-Type": "application/json", // You likely need this
+          "Content-Type": "application/json",
         },
       });
 
@@ -154,8 +154,8 @@ export const updateTask = createAsyncThunk<Task, Task, { rejectValue: string }>(
   "tasks/updateTask",
   async (data, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${BASE_URL}/${data.id}`, {
-        method: "POST", // Should this be PUT or PATCH?  Probably PUT/PATCH
+      const response = await fetch(`${BASE_URL}/update/${data.id}`, {
+        method: "PUT", // Should this be PUT or PATCH?  Probably PUT/PATCH
         headers: {
           "Content-Type": "application/json",
         },
