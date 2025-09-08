@@ -1,74 +1,95 @@
 package controllers
 
 import (
-	"encoding/json"
-	"golang-crud-rest-api/database"
-	"golang-crud-rest-api/entities"
 	"net/http"
+	"server_go/initializers"
+	"server_go/models"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func CreateTask(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var task entities.Task
-	json.NewDecoder(r.Body).Decode(&task)
-	database.Instance.Create(&task)
-	json.NewEncoder(w).Encode(task)
-}
-
-func GetTaskById(w http.ResponseWriter, r *http.Request) {
-	taskId := mux.Vars(r)["id"]
-	if checkIfTaskExists(taskId) == false {
-		json.NewEncoder(w).Encode("Task Not Found!")
+func CreateTask(c *gin.Context){
+	var taskInput models.Task
+	if err := c.ShouldBindJSON(&taskInput); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var task entities.Task
-	database.Instance.First(&task, taskId)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
+	initializers.DB.Create(&taskInput)
+
+	c.JSON(http.StatusOK, gin.H{"data": taskInput})
 }
 
-func GetTasks(w http.ResponseWriter, r *http.Request) {
-	var tasks []entities.Task
-	database.Instance.Find(&tasks)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(tasks)
-}
-
-func UpdateTask(w http.ResponseWriter, r *http.Request) {
-	taskId := mux.Vars(r)["id"]
-	if checkIfTaskExists(taskId) == false {
-		json.NewEncoder(w).Encode("Task Not Found!")
+func GetALLTask(c *gin.Context) {
+	var tasks []models.Task
+	result := initializers.DB.Find(&tasks)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
-	var task entities.Task
-	database.Instance.First(&task, taskId)
-	json.NewDecoder(r.Body).Decode(&task)
-	database.Instance.Save(&task)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
+	c.JSON(http.StatusOK, gin.H{"tasks": tasks})
 }
 
-func DeleteTask(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	taskId := mux.Vars(r)["id"]
-	if checkIfTaskExists(taskId) == false {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode("Task Not Found!")
-		return
-	}
-	var task entities.Task
-	database.Instance.Delete(&task, taskId)
-	json.NewEncoder(w).Encode("Task Deleted Successfully!")
-}
+func DoneTask(c *gin.Context) {
+	id := c.Param("id")
+	var task models.Task
+	initializers.DB.Where("id=?", id).First(&task)
 
-func checkIfTaskExists(taskId string) bool {
-	var task entities.Task
-	database.Instance.First(&task, taskId)
 	if task.ID == 0 {
-		return false
+		c.JSON(http.StatusBadRequest, gin.H{"error": "task not found"})
+		return
 	}
-	return true
+	if task.State == 2 {
+		c.JSON(http.StatusOK, gin.H{"message": "Task state is already complete"}) // Or return an error if that's unexpected  
+		return  
+	}  
+	if task.State == 1{
+		task.State = 2
+		if err := initializers.DB.Save(&task).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	}
+	if task.State == 0 {
+		task.State = 1 	
+		if err := initializers.DB.Save(&task).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"data": task})
+}
+func UpdateTask(c *gin.Context) {
+	id := c.Param("id")
+	var taskInput models.Task
+	if err := c.ShouldBindJSON(&taskInput); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var task models.Task
+	if err:= initializers.DB.Where("id=?", id).First(&task).Error; err != nil{
+		c.JSON(http.StatusBadRequest, gin.H{"error": "task not found"})
+		return
+	}
+	
+	task.Title = taskInput.Title
+	task.Description = taskInput.Description
+	if err:= initializers.DB.Save(&task).Error; err!= nil{
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed Save"})
+	}
+	c.JSON(http.StatusOK, gin.H{"task": task})
+}
+
+
+func DeleteTask(c *gin.Context) {
+	id := c.Param("id")
+	var task models.Task
+	
+
+	if err:= initializers.DB.Where("id=?", id).Delete(&task).Error; err != nil{
+		c.JSON(http.StatusBadRequest, gin.H{"error": "task not found"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"data": "Deleted the Task"})
 }

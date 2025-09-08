@@ -1,42 +1,36 @@
 package main
 
 import (
-	"fmt"
-	"golang-crud-rest-api/controllers"
-	"golang-crud-rest-api/database"
-	"log"
-	"net/http"
+	"server_go/controllers"
+	"server_go/initializers"
+	"time"
 
-	"github.com/gorilla/mux"
-	"gorm.io/gorm"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
-var DB *gorm.DB
-
-func main() {
-
-	// Load Configurations from config.json using Viper
-	LoadAppConfig()
-
-	// Initialize Database
-	database.Connect(AppConfig.ConnectionString)
-	database.Migrate()
-	
-	// Initialize the router
-	router := mux.NewRouter().StrictSlash(true)
-
-	// Register Routes
-	RegisterTaskRoutes(router)
-
-	// Start the server
-	log.Println("Starting Server on port", AppConfig.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", AppConfig.Port), router))
+func init() {
+	initializers.LoadEnvs()
+	initializers.ConnectDB()
 }
 
-func RegisterTaskRoutes(router *mux.Router) {
-	router.HandleFunc("/api/tasks", controllers.GetTasks).Methods("GET")
-	router.HandleFunc("/api/tasks/{id}", controllers.GetTaskById).Methods("GET")
-	router.HandleFunc("/api/tasks", controllers.CreateTask).Methods("POST")
-	router.HandleFunc("/api/tasks/{id}", controllers.UpdateTask).Methods("PUT")
-	router.HandleFunc("/api/tasks/{id}", controllers.DeleteTask).Methods("DELETE")
+func main() {
+	
+	router := gin.Default()
+ 	router.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://localhost:3000"}, // frontend URL
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+        MaxAge: 12 * time.Hour,
+    }))
+	router.POST("api/auth/signup", controllers.CreateUser)
+	router.POST("api/auth/login", controllers.Login)
+	router.POST("api/tasks/add", controllers.CreateTask)
+	router.GET("api/tasks",  controllers.GetALLTask)
+	router.DELETE("api/tasks/:id", controllers.DeleteTask)
+	router.PUT("api/tasks/:id", controllers.DoneTask)
+	router.POST("api/tasks/:id", controllers.UpdateTask)
+	router.Run()
 }

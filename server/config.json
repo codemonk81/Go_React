@@ -1,4 +1,0 @@
-{
-  "connection_string": "root:@tcp(127.0.0.1:3306)/normal_task",
-  "port": 8080
-}
